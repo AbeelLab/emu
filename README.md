@@ -9,6 +9,18 @@ Quick-run recipe:
 
   `java -jar emu.jar vcfify -o <output directory> -c ../CanonicalizedLSVs.vcf -s ../AllExtractedSNVs.vcf -v <file containing list of VCF files>`
 
+# Downloads and documentation
+
+Versioned production releases: https://github.com/AbeelLab/emu/releases
+
+Nightly development builds: http://abeellab.org/jenkins/emu/
+
+Source-code: https://github.com/AbeelLab/emu.git
+
+Submit bugs and features requests: https://github.com/AbeelLab/emu/issues
+
+Documentation: below
+
 # Commands:
 
 1). extract
