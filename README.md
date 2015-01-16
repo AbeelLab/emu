@@ -1,4 +1,4 @@
-# emu
+# Emu
 Emu is a tool that canonicalizes non-identical representations of large insertions and deletions (indels) and substitutions across multiple genome samples. All that is needed to get started is a file containing a list of VCF files and the appropriate reference genome used to generate the VCF files.
 
 Quick-run recipe:
