@@ -174,9 +174,9 @@ Finally, use the `metrics` command which compares the merged large variant (raw)
 To test run Emu, we provide two files containing extracted large variants and SNPs (the output files of Emu's `extract` command) from three previously published clinical strains of Mycobacterium tuberculosis (http://www.nature.com/ng/journal/v45/n10/full/ng.2735.html). 
 
 ###Instructions:
-Download the (latest) Emu binary release and extract it in a directory of your choice.
+Download the (latest) Emu binary release and extract it in a directory of your choice (https://github.com/AbeelLab/emu/releases).
 
-Extract the two provided files to a directory of your choice. 
+Extract the two provided files to a directory of your choice (https://github.com/AbeelLab/emu/releases). 
 
 Create a txt file containing three arbitrary sample names, one per line. In real usage, this file should instead contain the full pathname that points to the VCF files from a desired data set. But for now, use arbitrary names like `Sample1.vcf, Sample2.vcf, and Sample3.vcf`. NOTE: each name must end in the string '.vcf'.
 
