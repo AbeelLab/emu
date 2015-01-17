@@ -1,5 +1,5 @@
 # Emu
-Emu is a tool that normalizes alternate representations of large insertions and deletions (indels) and substitutions across multiple genome samples. This is done through a process called canonicalization. Emu requires a file containing a list of VCF files and the appropriate reference genome used to generate the VCF files.
+Emu is a tool that normalizes alternate representations of large insertions and deletions (indels) and substitutions across multiple genome samples. This is done through a process called canonicalization. To get running, Emu requires a file containing a list of VCF files and the appropriate reference genome used to generate those VCF files.
 
 Quick-run recipe:
 
@@ -19,7 +19,7 @@ Source-code: https://github.com/AbeelLab/emu.git
 
 Submit bugs and features requests: https://github.com/AbeelLab/emu/issues
 
-Documentation: below
+Documentation and test files: see sections below
 
 # Getting Started
 ## Installing Emu
@@ -68,7 +68,7 @@ Required arguments:
   Output directory
   
 -i or --input
-  File containing list of VCF file paths, one per line.
+  File containing list of VCF file paths, one per line. NOTE: each pathname must end in the string '.vcf'.
 
 -r <value> | --reference-genome <value>
   Input file that contains a list of FASTA-formatted reference genomes used in the VCF files. 
@@ -170,3 +170,19 @@ Finally, use the `metrics` command which compares the merged large variant (raw)
 -c or --canonicalized
   Input VCF file that contains canonicalized variants
 ```
+##Test run
+To test run Emu, we provide two files containing extracted large variants and SNPs (the output files of Emu's `extract` command) from three previously published clinical strains of Mycobacterium tuberculosis (http://www.nature.com/ng/journal/v45/n10/full/ng.2735.html). 
+
+###Instructions:
+Download the (latest) Emu binary release and extract it in a directory of your choice.
+
+Extract the two provided files to a directory of your choice. 
+
+Create a txt file containing three arbitrary sample names, one per line. In real usage, this file should instead contain the full pathname that points to the VCF files from a desired data set. But for now, use arbitrary names like `Sample1.vcf, Sample2.vcf, and Sample3.vcf`. NOTE: each name must end in the string '.vcf'.
+
+Execute the following command (note -Xmx1g was arbitrarily chosen):
+`java -Xmx2g -jar <fill emu directory>.jar <fill output directory> canonicalize -o <fill output directory> -i AllExtractedLSVs.reference_extended.vcf`
+
+Create separate VCF files for the arbitrary chose sample names:
+`java -Xmx2g -jar <fill emu directory>.jar <fill output directory> vcfify -o <fill appropriate directory> -c <fill appropriate directory>/CanonicalizedLSVs.vcf -s <fill appropriate directory>/AllExtractedSNVs.vcf -v <fill appropriate directory>/vcfList.testfiles.txt`
+
