@@ -159,7 +159,7 @@ First, use the `merge-identicals` command which merges raw large variants that w
   Input file containing raw large variant predictions (generally AllExtractedLSVS.reference_extended.vcf).
 ```
 
-Finally, use the `metrics` command which compares the canonicalized and uncanonicalized file and outputs a text file containing general metrics summarizing canonicalization in a given data set. This commands requires three arguments:
+Finally, use the `metrics` command which compares the merged large variant (raw) predictions file with the normalized VCF file and outputs a text file containing general metrics summarizing canonicalization in a given data set. In other words, summarizes the number of unique calls before and after the application of Emu on a given data set. This commands requires three arguments:
 ```
 -o or --output
   Input output directory.
