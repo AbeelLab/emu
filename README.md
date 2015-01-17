@@ -92,14 +92,17 @@ To canonicalize large variants, use the `canonicalize` argument.
 Canonicalization is performed in two sets: variants that are complete or have at least X nt (see `--min-comparison-length argument`) and variants that are incomplete and have less than X nt. The X value is 20 nt by default. The latter set undergoes a much stricter criterion during canonicalization (e.g. large variants must have the same coordinates, type, reference, and alternative sequences to be canonicalized).
 
 For information regarding canonicalization of large variants with nested variation, see the optional argument, `--max_leniency`.
-For information regarding log files, see the optional argument `--document-logs`.
+
+For information regarding log files, see the optional argument, `--document-logs`.
 
 Required arguments:
 ```
 -o or --output
   Output directory.
+  
 -i or --input
   Input file extracted LSVs only. By default, this file is called 'AllExtractedLSVs.reference_extended.vcf'.
+  
 -l or --max_leniency
   Input maximum percent difference (default is 0.01). This can be tuned down to avoid overzealous 
   canonicalization of variants with nested variation (e.g. insertion and substitutions with SNPs).
@@ -126,3 +129,28 @@ Optional arguments:
   Argument that allows  canonicalization of large variants across contigs. By default, this
   parameter is turned off.
 ```
+
+###Emu metrics
+We provide pair of commands summarizes canonicalization in a given data set. The steps are outlined below:
+
+First, use the `merge-identicals` which merges raw large variants that were consistently predicted across a given data set. This command needs only two arguments:
+```
+-o or --output
+  Output directory
+  
+-u or --uncanonicalized
+  Input file containing raw large variant predictions (generally AllExtractedLSVS.reference_extended.vcf).
+```
+
+Finally, use the `metrics` command which compares the canonicalized file and outputs a text file containing general metrics of canonicalization in a given data set. This commands requires only three arguments:
+```
+-o or --output
+  Input output directory.
+  
+-u or --uncanonicalized
+  Input VCF file that contains uncanonicalized variants.
+  
+-c or --canonicalized
+  Input VCF file that contains canonicalized variants
+```
+
