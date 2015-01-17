@@ -1,5 +1,5 @@
 # Emu
-Emu is a tool that canonicalizes non-identical representations of large insertions and deletions (indels) and substitutions across multiple genome samples. It requires file containing a list of VCF files and the appropriate reference genome used to generate the VCF files.
+Emu is a tool that normalizes alternate representations of large insertions and deletions (indels) and substitutions across multiple genome samples. This is done through a process called canonicalization. Emu requires a file containing a list of VCF files and the appropriate reference genome used to generate the VCF files.
 
 Quick-run recipe:
 
@@ -87,9 +87,9 @@ Optional arguments:
   Prefix name for extacted LSV output file (default is 'AllExtractedLSVs.reference_extended.vcf').
 ```
 ###Canonicalizing large variants
-To canonicalize large variants, use the `canonicalize` argument. 
+To normalize large variants, use the `canonicalize` argument. 
 
-Canonicalization is performed in two sets: variants that are complete or have at least X nt (see `--min-comparison-length argument`) and variants that are incomplete and have less than X nt. The X value is 20 nt by default. The latter set undergoes a much stricter criterion during canonicalization (e.g. large variants must have the same coordinates, type, reference, and alternative sequences to be canonicalized).
+Canonicalization is performed in two sets: variants that are complete or have at least X nt (see `--min-comparison-length argument`) and variants that are incomplete and have less than X nt. The X value is 20 nt by default. The latter set undergoes a much stricter criterion during canonicalization (e.g. large variants must have the same coordinates, type, reference, and alternative sequences to be canonicalized). The output of both sets are merged into one VCF file called 'CanonicalizedLSVs.vcf'
 
 For information regarding canonicalization of large variants with nested variation, see the optional argument, `--max_leniency`.
 
@@ -131,9 +131,9 @@ Optional arguments:
 ```
 
 ###Emu metrics
-We provide pair of commands summarizes canonicalization in a given data set. The steps are outlined below:
+We provide pair of commands that summarizes canonicalization in a given data set. The steps are outlined below:
 
-First, use the `merge-identicals` which merges raw large variants that were consistently predicted across a given data set. This command needs only two arguments:
+First, use the `merge-identicals` command which merges raw large variants that were consistently predicted across a given data set and redirects the output to a separate VCF file. This command needs only two arguments:
 ```
 -o or --output
   Output directory
@@ -142,7 +142,7 @@ First, use the `merge-identicals` which merges raw large variants that were cons
   Input file containing raw large variant predictions (generally AllExtractedLSVS.reference_extended.vcf).
 ```
 
-Finally, use the `metrics` command which compares the canonicalized file and outputs a text file containing general metrics of canonicalization in a given data set. This commands requires only three arguments:
+Finally, use the `metrics` command which compares the canonicalized and uncanonicalized file and outputs a text file containing general metrics summarizing canonicalization in a given data set. This commands requires three arguments:
 ```
 -o or --output
   Input output directory.
