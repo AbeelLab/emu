@@ -23,7 +23,7 @@ Documentation: below
 
 # Getting Started
 ## Installing Emu
-Download the (latest) binary release (https://github.com/AbeelLab/emu/blob/master/README.md) and extract it in your directory of choice. To verify proper installation, execute 'javar -jar emu.jar'. You should see the following CLI:
+Download the (latest) binary release (https://github.com/AbeelLab/emu/releases) and extract it in your directory of choice. To verify proper installation, execute 'javar -jar emu.jar'. You should see the following CLI:
 
 ```
 EEEEEEEEEEEEEEEEEEEEEEMMMMMMMM               MMMMMMMMUUUUUUUU     UUUUUUUU
@@ -86,7 +86,7 @@ Optional arguments:
 -L or --LSV-output-prefix
   Prefix name for extacted LSV output file (default is 'AllExtractedLSVs.reference_extended.vcf').
 ```
-###Canonicalizing large variants
+###Normalizing large variants
 To normalize large variants, use the `canonicalize` argument. 
 
 Canonicalization is performed in two sets: variants that are complete or have at least X nt (see `--min-comparison-length argument`) and variants that are incomplete and have less than X nt. The X value is 20 nt by default. The latter set undergoes a much stricter criterion during canonicalization (e.g. large variants must have the same coordinates, type, reference, and alternative sequences to be canonicalized). The output of both sets are merged into one VCF file called 'CanonicalizedLSVs.vcf'
@@ -129,9 +129,26 @@ Optional arguments:
   Argument that allows  canonicalization of large variants across contigs. By default, this
   parameter is turned off.
 ```
-
+###VCFify
+Finally, the command `vcfify` will create individual standard VCF files that contain a strain's normalized large variants and initial SNPs. This command requires the following arguments:
+```
+-o or --output
+  Output directory
+  
+-c or --canonicalized
+  Input file that contains normalized variants (generally CanonicalizedLSVs.vcf).
+  
+-s or --small
+  Input file that contains SNPs and indels. This file is an output of (AllExtractedSmall.emu)
+  
+-v or --vcf-list
+  Input file that contains list of initial VCF files (same file given in the extract command).
+  
+-p or --output-prefix
+  Ouput prefix for each VCF file (Default is 'canonicalized').
+```
 ###Emu metrics
-We provide pair of commands that summarizes canonicalization in a given data set. The steps are outlined below:
+We provide pair of commands to summarize normalization in a given data set. The steps are outlined below:
 
 First, use the `merge-identicals` command which merges raw large variants that were consistently predicted across a given data set and redirects the output to a separate VCF file. This command needs only two arguments:
 ```
@@ -153,4 +170,3 @@ Finally, use the `metrics` command which compares the canonicalized and uncanoni
 -c or --canonicalized
   Input VCF file that contains canonicalized variants
 ```
-
