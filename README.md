@@ -180,7 +180,7 @@ Extract the two provided files to a directory of your choice.
 
 Create a txt file containing three arbitrary sample names, one per line. In real usage, this file should instead contain the full pathname that points to the VCF files from a desired data set. But for now, use arbitrary names like `Sample1.vcf, Sample2.vcf, and Sample3.vcf`. NOTE: each name must end in the string '.vcf'.
 
-Execute the following command (note -Xmx1g was arbitrarily chosen):
+Execute the following command (note: -Xmx value was arbitrarily chosen):
 `java -Xmx2g -jar <fill emu directory>.jar <fill output directory> canonicalize -o <fill output directory> -i AllExtractedLSVs.reference_extended.vcf`
 
 Create separate VCF files for the arbitrary chose sample names:
