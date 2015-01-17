@@ -19,7 +19,7 @@ Source-code: https://github.com/AbeelLab/emu.git
 
 Submit bugs and features requests: https://github.com/AbeelLab/emu/issues
 
-Documentation and test files: see sections below
+Documentation and test run: see sections below
 
 # Getting Started
 ## Installing Emu
