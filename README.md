@@ -171,7 +171,7 @@ Finally, use the `metrics` command which compares the merged large variant (raw)
   Input VCF file that contains canonicalized variants
 ```
 ##Test run
-To test run Emu, we provide two files containing extracted large variants and SNPs (the output files of Emu's `extract` command) from three previously published clinical strains of Mycobacterium tuberculosis (http://www.nature.com/ng/journal/v45/n10/full/ng.2735.html). 
+To test run Emu, we provide two separate VCF files containing extracted large variants and SNPs (the output files of Emu's `extract` command) from three previously published clinical strains of Mycobacterium tuberculosis (http://www.nature.com/ng/journal/v45/n10/full/ng.2735.html). 
 
 ###Instructions:
 Download the (latest) Emu binary release and extract it in a directory of your choice (https://github.com/AbeelLab/emu/releases).
