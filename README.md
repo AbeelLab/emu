@@ -22,7 +22,7 @@ Submit bugs and features requests: https://github.com/AbeelLab/emu/issues
 Documentation and test run: see sections below:
 
 Citation: 
-We have recently submitted a manuscript of Emu to the ISMB 2015 Conference Proceedings. For temporary citation, cite our published extended abstract (www.biomedcentral.com/1471-2105/16/S2/A8/abstract).
+we have recently submitted a manuscript of Emu to the ISMB 2015 Conference Proceedings. For temporary citation, cite our published extended abstract (www.biomedcentral.com/1471-2105/16/S2/A8/abstract).
 
 # Getting Started
 ## Installing Emu
