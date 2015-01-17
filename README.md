@@ -91,8 +91,8 @@ To canonicalize large variants, use the `canonicalize` argument.
 
 Canonicalization is performed in two sets: variants that are complete or have at least X nt (see `--min-comparison-length argument`) and variants that are incomplete and have less than X nt. The X value is 20 nt by default. The latter set undergoes a much stricter criterion during canonicalization (e.g. large variants must have the same coordinates, type, reference, and alternative sequences to be canonicalized).
 
-For information regarding canonicalization of large variants with nested variation, see the `--max_leniency` argument. 
-For information regarding log files, see the `--document-logs` argument.
+For information regarding canonicalization of large variants with nested variation, see the optional argument, `--max_leniency`.
+For information regarding log files, see the optional argument `--document-logs`.
 
 Required arguments:
 ```
