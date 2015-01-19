@@ -47,7 +47,6 @@ E::::::::::::::::::::EM::::::M               M::::::M    UU:::::::::UU
 EEEEEEEEEEEEEEEEEEEEEEMMMMMMMM               MMMMMMMM      UUUUUUUUU
 
 Emu is an algorithm that canonicalizes alternate representations of large sequence variants across microbial genomes.
-Please contact Alex Salazar at salazar@broadinstitute.org for any questions.
 
     COMMANDS             DESCRIPTION
     extract              Extracts all PASS-only LSVs and SNPs.
