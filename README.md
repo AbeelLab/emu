@@ -72,7 +72,7 @@ Required arguments:
 -i or --input
   File containing list of VCF file paths, one per line. NOTE: each pathname must end in the string '.vcf'.
 
--r <value> | --reference-genome <value>
+-r or --reference-genome
   Input file that contains a list of FASTA-formatted reference genomes used in the VCF files. 
   Emu can parse multi-contig reference genomes.
 ```	        
