@@ -180,7 +180,7 @@ Download the (latest) Emu binary release and extract it in a directory of your c
 
 Extract the two provided files to a directory of your choice (download 'Test-Files.zip' at https://github.com/AbeelLab/emu/releases). 
 
-Create a txt file containing three arbitrary sample names, one per line. In real usage, this file should instead contain the full pathname that points to the VCF files from a desired data set. But for now, use arbitrary names like `Sample1.vcf, Sample2.vcf, and Sample3.vcf`. NOTE: each name must end in the string '.vcf'.
+Create a txt file containing three sample names, one per line. In real usage, this file should instead contain the full pathname that points to the VCF files from a desired data set. But for now, use the following names: `SRR671737.vcf, SRR671785.vcf, and SRR671754.vcf`. NOTE: each name must end in the string '.vcf'.
 
 Execute the following command (note: -Xmx value was arbitrarily chosen):
 `java -Xmx2g -jar <fill emu directory>.jar <fill output directory> canonicalize -o <fill output directory> -i AllExtractedLSVs.reference_extended.vcf`
