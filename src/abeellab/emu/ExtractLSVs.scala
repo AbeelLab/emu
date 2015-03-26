@@ -40,6 +40,11 @@ object ExtractLSVs extends Tool {
         c.copy(_LSV_size = x)
       } text ("[OPTIONAL] Input minimum size (nt) for a variant to be considered an LSV (default 2).")
       
+      //optional value for the minimum size of a variant to be considered an LSV. Default is any variant greater or equal to 2nt.
+      opt[String]('s', "LSV-size") optional () action { (x, c) =>
+        c.copy(_LSV_size = x)
+      } text ("[OPTIONAL] Input minimum size (nt) for a variant to be considered an LSV (default 2).")
+      
       //optional value for the attached flanking sequences to LSVs during extraction
       opt[String]('F', "flanking-size") optional () action { (x, c) =>
         c.copy(_flankingSize = x)
@@ -169,14 +174,14 @@ object ExtractLSVs extends Tool {
         println("Adding flanking sequences to LSV at coordinate " + coord)
         //if left side of the starting coord is too small, take what is available
         if (coord - flanking_seq_sizes < 0) {
-          assert(false, "LSV coordinate is to close to the 'starting' genome coordinate. "+
-              "Please contact Alex Salazar at salazar@broadinstitute.org regarding this error.")
+//          assert(false, "LSV coordinate is to close to the 'starting' genome coordinate. "+
+//              "Please contact Alex Salazar at salazar@broadinstitute.org regarding this error.")
           val temp = ref.substring(0, coord + flanking_seq_sizes + lsv.reference_seq.size - 1)
           List(temp.substring(0, coord), temp.substring(coord + lsv.reference_seq.size))
         } //if the right side of the starting coord is too small, take what is available
         else if (coord + flanking_seq_sizes + lsv.reference_seq.size > ref.size) {
-          assert(false, "LSV coordinate is to close to the 'ending' genome coordinate. "+
-              "Please contact Alex Salazar at salazar@broadinstitute.org regarding this error.")
+//          assert(false, "LSV coordinate is to close to the 'ending' genome coordinate. "+
+//              "Please contact Alex Salazar at salazar@broadinstitute.org regarding this error.")
           val temp = ref.substring(coord - flanking_seq_sizes - 1)
           val normalized_coord = coord - (coord - flanking_seq_sizes)
           List(temp.substring(0, normalized_coord), temp.substring(normalized_coord + lsv.reference_seq.size))
