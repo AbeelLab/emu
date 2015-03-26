@@ -5,9 +5,9 @@ Quick-run recipe:
 
   `java -jar emu.jar extract -o <output directory> -i <file containing list of VCF files> -r <FASTA-formatted reference genome>`
 
-  `java -jar emu.jar canonicalize -o <output directory> -i ../AllExtractedLSVs.reference_extended.vcf`
+  `java -jar emu.jar canonicalize -o <output directory> -i <output directory>/AllExtractedLSVs.reference_extended.vcf`
 
-  `java -jar emu.jar vcfify -o <output directory> -c ../CanonicalizedLSVs.vcf -s ../AllExtractedSNVs.vcf -v <file containing list of VCF files>`
+  `java -jar emu.jar vcfify -o <output directory> -c <output directory>/CanonicalizedLSVs.vcf -s <output directory>/AllExtractedSNVs.vcf -v <file containing list of VCF files>`
 
 # Downloads and documentation
 
