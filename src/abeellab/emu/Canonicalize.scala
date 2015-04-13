@@ -76,14 +76,14 @@ object Canonicalize extends Tool {
       assume(config.input.isFile(), "The input is not a file: " + config.input)
 
       val documentation_directory = new File(config.output.toString() + "/normalization_log")
-      if (documentation_directory.exists())
-        throw new IllegalStateException("A '/normalization_log' directory already exists " +
-          "inside the specified output directory! ")
-      else {
+//      if (documentation_directory.exists())
+//        throw new IllegalStateException("A '/normalization_log' directory already exists " +
+//          "inside the specified output directory! ")
+//      else {
         documentation_directory.mkdirs()
-        assume(documentation_directory.exists(), "Could not create output directory :" +
-          documentation_directory.getAbsoluteFile())
-      }
+//        assume(documentation_directory.exists(), "Could not create output directory :" +
+//          documentation_directory.getAbsoluteFile())
+//      }
 
       //double checks that the desired output file names does not exist already
       assume(!(new File(config.output.getAbsolutePath() + "/" + config._output_prefix + ".vcf")).exists,
