@@ -10,29 +10,29 @@ object LSV_canonicalizer extends Tool {
     if (parameter) true else chrm1 == chrm2
   }
 
-  private def isOverlap4below(reference_variant: normalizationTools4CompleteLSVs, 
-  	LSV: normalizationTools4CompleteLSVs): Boolean = {
-  	  reference_variant.position_true == LSV.position_true &&
-  	  reference_variant.variant_type == LSV.variant_type  	
-  	}
-  
+  private def isOverlap4below(reference_variant: normalizationTools4CompleteLSVs,
+    LSV: normalizationTools4CompleteLSVs): Boolean = {
+    reference_variant.position_true == LSV.position_true &&
+      reference_variant.variant_type == LSV.variant_type
+  }
+
   private def isIdentical(reference_variant: normalizationTools4CompleteLSVs, LSV: normalizationTools4CompleteLSVs): Boolean = {
     reference_variant.position_true == LSV.position_true &&
       reference_variant.reference_seq_true == LSV.reference_seq_true &&
       reference_variant.alternative_seq_true == LSV.alternative_seq_true
   }
-  
+
   //assumes that there variants are insertions
-  private def logicallyDifferent(reference_variant: normalizationTools4CompleteLSVs, 
-      LSV: normalizationTools4CompleteLSVs, leniency: Double): Boolean = {
-      if(reference_variant.variant_type == "Insertion" &&
-          LSV.variant_type == "Insertion" &&
-          !reference_variant.isIncomplete &&
-          !LSV.isIncomplete &&
-          reference_variant.position_true == LSV.position_true){          
+  private def logicallyDifferent(reference_variant: normalizationTools4CompleteLSVs,
+    LSV: normalizationTools4CompleteLSVs, leniency: Double): Boolean = {
+    if (reference_variant.variant_type == "Insertion" &&
+      LSV.variant_type == "Insertion" &&
+      !reference_variant.isIncomplete &&
+      !LSV.isIncomplete &&
+      reference_variant.position_true == LSV.position_true) {
       val smallest = List(reference_variant.alternative_seq.size, LSV.alternative_seq.size).min
-      (reference_variant.alternative_seq_size_true - LSV.alternative_seq_size_true).abs  > smallest * leniency
-      } else false
+      (reference_variant.alternative_seq_size_true - LSV.alternative_seq_size_true).abs > smallest * leniency
+    } else false
   }
 
   def canonicalizeBelowThreshold(LSVs: List[normalizationTools4CompleteLSVs],
@@ -71,15 +71,16 @@ object LSV_canonicalizer extends Tool {
                 else computeDifferences(extendedSequences) <= computeLeniency(extendedSequences, 0)
               }
             })
-          }          
-          
+          }
+
           val modified_list_alt_reps = {
-            if (alternate_representations.size == 0) reference_variant :: alternate_representations 
+            if (alternate_representations.size == 0) reference_variant :: alternate_representations
             else alternate_representations
           }
-          
+
           val canonicalized_LSV = merge(modified_list_alt_reps)
-          if (boolean4LogFile) log_under(canonicalized_LSV, reference_variant, overlapping_variants, outputDir)
+          if (boolean4LogFile)
+            log_under(canonicalized_LSV, reference_variant, overlapping_variants, outputDir)
           canonicalized_output_file.println(canonicalized_LSV)
           recursive(remaining_variants.tail diff alternate_representations)
         }
@@ -114,7 +115,7 @@ object LSV_canonicalizer extends Tool {
             remaining_variants.filter(LSV => {
               if (LSV.isIncomputable) false
               //cant canonicalize intra-sample LSVs              
-              else {                
+              else {
                 determineCrossContig(boolean_cross_contig, reference_variant.chromosome, LSV.chromosome) &&
                   reference_variant.isOverlap(LSV)
               }
@@ -123,9 +124,9 @@ object LSV_canonicalizer extends Tool {
           //find true alternate representations of the overlapping LSVs
           val alternate_representations = {
             overlapping_variants.filter(LSVs => {
-            if (logicallyDifferent(reference_variant, LSVs, max_leniency)) false
-            else if (isIdentical(reference_variant, LSVs)) true
-              else {                
+              if (logicallyDifferent(reference_variant, LSVs, max_leniency)) false
+              else if (isIdentical(reference_variant, LSVs)) true
+              else {
                 val extendedSequences = reference_variant.readyComparison(LSVs)
                 if (extendedSequences.isEmpty) false
                 else {
@@ -138,7 +139,8 @@ object LSV_canonicalizer extends Tool {
           //otherwise, add all alternate representation to this list
           val modified_list_alt_reps = if (alternate_representations.size == 0) reference_variant :: alternate_representations else alternate_representations
           val canonicalized_LSVs = merge(modified_list_alt_reps)
-          if (boolean4LogFile) log_over(canonicalized_LSVs, reference_variant, modified_list_alt_reps, overlapping_variants, outputDir)
+          if (boolean4LogFile) 
+            log_over(canonicalized_LSVs, reference_variant, modified_list_alt_reps, overlapping_variants, outputDir)
           canonicalized_output_file.println(canonicalized_LSVs)
           recursive((remaining_variants diff modified_list_alt_reps).sortBy(lsv => lsv.position))
         }

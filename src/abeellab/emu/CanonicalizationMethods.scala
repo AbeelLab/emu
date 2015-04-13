@@ -39,9 +39,11 @@ object CanonicalizationMethods extends Tool {
     variant.convertString.replace(variant.info, variant.info + ("ID:LSV_" + ID.get("LSV_", id) + "." + id + ";"))
   }
 
-  def log_over(merge: String, reference_variant: normalizationTools4CompleteLSVs,
+  def log_over(mergeList: List[String], reference_variant: normalizationTools4CompleteLSVs,
     alt_reps: List[normalizationTools4CompleteLSVs], overlaps: List[normalizationTools4CompleteLSVs],
     outputDir: String) {
+    
+    for(merge<-mergeList){
     val normalized = new VCFvariant(merge)
     val name = normalized.info.substring(normalized.info.indexOf("ID:") + 3, normalized.info.lastIndexOf(";"))
     val sup = new PrintWriter(outputDir + "normalization_log/" + name + ".txt")
@@ -55,30 +57,33 @@ object CanonicalizationMethods extends Tool {
     sup.println("Non-alternate representations:")
     (overlaps diff alt_reps).foreach(f => sup.println(f.convertString_true))
     sup.close()
+    }
   }
 
-  def log_under(merge: String, reference_variant: normalizationTools4CompleteLSVs,
+  def log_under(mergeList: List[String], reference_variant: normalizationTools4CompleteLSVs,
     identical_variants: List[normalizationTools4CompleteLSVs], outputDir: String) {
 
-    val normalized = new VCFvariant(merge)
-    val dir = new java.io.File(outputDir + "normalization_log/").listFiles.toList.map { f => f.getName() }
-    val name = normalized.info.substring(normalized.info.indexOf("ID:") + 3, normalized.info.lastIndexOf(";"))
-    val sup = new PrintWriter(outputDir + "normalization_log/" + name)
-    sup.println("Merged variant:\t" + merge)
-    sup.println("Reference variant:\t" + reference_variant.convertString_true)
-    sup.println("Above alternative sequence threshold:\tfalse")
-    sup.println("Alternate representations count:\t" + identical_variants.size)
-    sup.println("Alternate representations:\t" + identical_variants.size)
-    sup.println("Alternate representations variants:")
-    identical_variants.foreach(f => sup.println(f.convertString_true))
-    sup.close()
+    for (merge <- mergeList) {
+      val normalized = new VCFvariant(merge)
+      val dir = new java.io.File(outputDir + "normalization_log/").listFiles.toList.map { f => f.getName() }
+      val name = normalized.info.substring(normalized.info.indexOf("ID:") + 3, normalized.info.lastIndexOf(";"))
+      val sup = new PrintWriter(outputDir + "normalization_log/" + name)
+      sup.println("Merged variant:\t" + merge)
+      sup.println("Reference variant:\t" + reference_variant.convertString_true)
+      sup.println("Above alternative sequence threshold:\tfalse")
+      sup.println("Alternate representations count:\t" + identical_variants.size)
+      sup.println("Alternate representations:\t" + identical_variants.size)
+      sup.println("Alternate representations variants:")
+      identical_variants.foreach(f => sup.println(f.convertString_true))
+      sup.close()
+    }
   }
 
   private def mergeSameLSVtype(alternate_representations: List[normalizationTools4CompleteLSVs], LSV_type: String): String = {
-    val additionalInfo_sample: String => String = representative_name =>{
+    val additionalInfo_sample: String => String = representative_name => {
       val temp = alternate_representations.map(lsv => lsv.emuSampleName)
-                 .filterNot(name => name == representative_name).mkString(",")
-       if(temp.size == 0) temp else ","+temp
+        .filterNot(name => name == representative_name).mkString(",")
+      if (temp.size == 0) temp else "," + temp
     }
     val representative_LSV: normalizationTools4CompleteLSVs = {
       if (LSV_type == "Deletion") {
@@ -89,21 +94,21 @@ object CanonicalizationMethods extends Tool {
         alternate_representations.sortBy(lsv => lsv.difference_true).reverse(0)
       }
     }
-      val chromosome_names = alternate_representations.map(lsv => lsv.chromosome).distinct
-      val IDincluded = includeID(representative_LSV.convertString_true.replace(representative_LSV.info,
-    		  		representative_LSV.info + "," + additionalInfo_sample(representative_LSV.emuSampleName)+";"))
-      if(chromosome_names.size == 1) IDincluded
-      else{
-        val chromosome_names_modified = chromosome_names.mkString(".")
-        IDincluded.replace(representative_LSV.chromosome, chromosome_names_modified)
-      }
+    val chromosome_names = alternate_representations.map(lsv => lsv.chromosome).distinct
+    val IDincluded = includeID(representative_LSV.convertString_true.replace(representative_LSV.info,
+      representative_LSV.info + "," + additionalInfo_sample(representative_LSV.emuSampleName) + ";"))
+    if (chromosome_names.size == 1) IDincluded
+    else {
+      val chromosome_names_modified = chromosome_names.mkString(".")
+      IDincluded.replace(representative_LSV.chromosome, chromosome_names_modified)
+    }
   }
 
   private def getMostParsimoniousLSV(alternate_representations: List[normalizationTools4CompleteLSVs], LSV_type: String): String = {
-    val additionalInfo_sample: String => String = representative_name =>{
+    val additionalInfo_sample: String => String = representative_name => {
       val temp = alternate_representations.map(lsv => lsv.emuSampleName)
-                 .filterNot(name => name == representative_name).mkString(",")
-       if(temp.size == 0) temp else ","+temp
+        .filterNot(name => name == representative_name).mkString(",")
+      if (temp.size == 0) temp else "," + temp
     }
     val representative_LSV: normalizationTools4CompleteLSVs = {
       if (LSV_type == "Deletion.Substitution") {
@@ -116,27 +121,33 @@ object CanonicalizationMethods extends Tool {
     val chromosome_names = alternate_representations.map(lsv => lsv.chromosome).distinct
     val IDincluded = includeID(representative_LSV.convertString_true.replace(representative_LSV.info,
       representative_LSV.info + additionalInfo_sample(representative_LSV.emuSampleName) + ";"))
-    if(chromosome_names.size == 1) IDincluded
-      else{
-        val chromosome_names_modified = chromosome_names.mkString(".")
-        IDincluded.replace(representative_LSV.chromosome, chromosome_names_modified)
-      }  
+    if (chromosome_names.size == 1) IDincluded
+    else {
+      val chromosome_names_modified = chromosome_names.mkString(".")
+      IDincluded.replace(representative_LSV.chromosome, chromosome_names_modified)
+    }
   }
 
-  def merge(alternate_representations: List[normalizationTools4CompleteLSVs]): String = {
+  def merge(alternate_representations: List[normalizationTools4CompleteLSVs]): List[String] = {
     val types = alternate_representations.map(lsv => lsv.variant_type).distinct
     if (types.size == 1) {
       types(0) match {
-        case "Deletion" => mergeSameLSVtype(alternate_representations, "Deletion")
-        case "Insertion" => mergeSameLSVtype(alternate_representations, "Insertion")
-        case "Substitution" => mergeSameLSVtype(alternate_representations, "Substitution")
+        case "Deletion" => List(mergeSameLSVtype(alternate_representations, "Deletion"))
+        case "Insertion" => List(mergeSameLSVtype(alternate_representations, "Insertion"))
+        case "Substitution" => List(mergeSameLSVtype(alternate_representations, "Substitution"))
       }
     } else {
-      assert(!(types.contains("Insertion") && types.contains("Deletion")), "Insertion and deletion present in merging")
-      if (types.contains("Deletion") && types.contains("Substitution")) getMostParsimoniousLSV(alternate_representations, "Deletion.Substitution")
-      else {
+      //HACK TO MAKE IT RUN ON TB-GLOBAL, NEEDS VERIFICATION!!!
+      //      assert(!(types.contains("Insertion") && types.contains("Deletion")), "Insertion and deletion present in merging")
+      if (types.contains("Insertion") && types.contains("Deletion")) {
+        val ins_sub = alternate_representations.filterNot(p => p.variant_type.contains("Insertion.Substitution"))
+        val del = alternate_representations.filterNot(p => p.variant_type.contains("Deletion"))
+        List(getMostParsimoniousLSV(del, "Deletion"), getMostParsimoniousLSV(del, "Deletion"))
+      } else if (types.contains("Deletion") && types.contains("Substitution")) {
+        List(getMostParsimoniousLSV(alternate_representations, "Deletion.Substitution"))
+      } else {
         assert(types.contains("Insertion") && types.contains("Substitution"), "Expected Insertion and Substitution mix type in merging")
-        getMostParsimoniousLSV(alternate_representations, "Insertion.Substitution")
+        List(getMostParsimoniousLSV(alternate_representations, "Insertion.Substitution"))
       }
     }
   }
