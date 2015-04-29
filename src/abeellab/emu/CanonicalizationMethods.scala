@@ -140,9 +140,9 @@ object CanonicalizationMethods extends Tool {
       //HACK TO MAKE IT RUN ON TB-GLOBAL, NEEDS VERIFICATION!!!
       //      assert(!(types.contains("Insertion") && types.contains("Deletion")), "Insertion and deletion present in merging")
       if (types.contains("Insertion") && types.contains("Deletion")) {
-        val ins_sub = alternate_representations.filterNot(p => p.variant_type.contains("Insertion.Substitution"))
-        val del = alternate_representations.filterNot(p => p.variant_type.contains("Deletion"))
-        List(getMostParsimoniousLSV(del, "Deletion"), getMostParsimoniousLSV(del, "Deletion"))
+        val ins_sub = alternate_representations.filter(p => p.variant_type.contains("Insertion")|| p.variant_type.contains("Substitution"))
+        val del = alternate_representations.filter(p => p.variant_type.contains("Deletion"))
+        List(mergeSameLSVtype(del, "Deletion"), getMostParsimoniousLSV( ins_sub, "Insertion.Substitution"))
       } else if (types.contains("Deletion") && types.contains("Substitution")) {
         List(getMostParsimoniousLSV(alternate_representations, "Deletion.Substitution"))
       } else {
