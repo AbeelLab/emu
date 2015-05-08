@@ -11,11 +11,11 @@ import java.io.File
  * all the LSVs identified from the input directory.
  */
 
-object ExtractLSVs extends Tool {
+object ExtractLSVs extends Tool with EmuUtils{
 
   case class Config(val input: File = null, val output: File = null, val _flankingSize: String = null,
     val _referenceGenome: File = null, val _LSV_size: String = null, val _LSV_prefix: String = null,
-    val _SNV_prefix: String = null)
+    val _SNV_prefix: String = null,val keepNonPassing:Boolean=false)
 
   def main(args: Array[String]) {
 
@@ -35,6 +35,12 @@ object ExtractLSVs extends Tool {
         c.copy(_referenceGenome = x)
       } text ("Input file that contains a list of reference genomes used in the VCF files")
 
+//      //Keep non-passing variant calls -- 
+//      opt[Unit]('k', "keepNonPassing") action { (x, c) =>
+//        c.copy(keepNonPassing = true)
+//        
+//      } text ("Keep non-passing calls in the VCF files.  Not recommended as they may be partially overwritten by normalized calls.")
+      
       //optional value for the minimum size of a variant to be considered an LSV. Default is any variant greater or equal to 2nt.
       opt[String]('s', "LSV-size") optional () action { (x, c) =>
         c.copy(_LSV_size = x)
@@ -108,10 +114,10 @@ object ExtractLSVs extends Tool {
     }
   }
 
-  //method to get name of sample.
-  private def getSampleName(name: String): String =
-    //assumes that the name is if preceeded by the directory full path and has an extension name (e.g. ".vcf")
-    { val temp = name.substring(name.lastIndexOf("/") + 1); temp.substring(0, temp.lastIndexOf(".")) }
+//  //method to get name of sample.
+//  private def getSampleName(name: String): String =
+//    //assumes that the name is if preceeded by the directory full path and has an extension name (e.g. ".vcf")
+//    { val temp = name.substring(name.lastIndexOf("/") + 1); temp.substring(0, temp.lastIndexOf(".")) }
 
   def extractLSVs(vcfFiles: List[String], _referenceGenome: java.io.File, outputDir: String,
     flanking_seq_sizes: Int, LSVprefix: String, SNVprefix: String, LSV_size: Int) {
@@ -195,15 +201,16 @@ object ExtractLSVs extends Tool {
     }
     //iterates through each file in the vcfFiles list and splits up LSVs and SNVs while creating individual LSV vcf files
     vcfFiles.foreach(file => {
-      val emu_sample_name = getSampleName(file)
-      println("Extracting from " + getSampleName(file) + " VCF file.")
+      val emu_sample_name = extractID(file)
+      
+      println("Extracting from " + extractID(file) + " VCF file.")
       //val referenceGenome = tLines(_referenceGenomes).filter(line => line.startsWith(">")).flatten.mkString("\n")
       //val referenceGenome_size = referenceGenome.size
 
       //Not needed? val pw_sample = new PrintWriter(outputDir + LSVprefix + ".reference_extended.vcf")
       //make variant into class VCFvariant
       println("Converting variants to VCFvariant class.")
-      val variants: List[VCFvariant] = tLines(file).map(variant => new VCFvariant(variant))
+      val variants: List[VCFvariant] = tLines(file).map(variant => new VCFvariant(variant)).filter(_.filter.equals("PASS"))
       //function to compute the flanking sequence of an LSV based on it's respective reference genome 
       //(see code above) and position      
       println("Separating LSVs and SNVs")
@@ -216,6 +223,8 @@ object ExtractLSVs extends Tool {
       val SNVs = (variants diff LSVs).map(snv => snv.convertString.replace(snv.info, snv.info +
         ";EMU_SAMPLE_NAME=" + emu_sample_name))
       //print all SNVs to respective output file
+        
+        
       SNVs.foreach(snv => pw_all_SNVs.println(snv))
       println("Outputting LSVs")
       //add the flanking sequences to LSVs and output it to its respective file

@@ -4,7 +4,7 @@ import java.io.File
 import atk.util.Tool
 import java.io.PrintWriter
 
-object VCFify extends Tool {
+object VCFify extends Tool with EmuUtils {
 
   case class Config(val large: File = null, val output: File = null, small: File = null,
     val vcf_list: File = null, val _prefix: String = null)
@@ -36,31 +36,37 @@ object VCFify extends Tool {
       assume(config.vcf_list.exists(), "The input file does not exists!")
       assume(config.vcf_list.isFile(), "The input file is not a file: " + config.vcf_list)
 
-      val prefix: String ={
+      val prefix: String = {
         if (config._prefix == null) ".canonicalized"
-        else 
+        else
           "." + config._prefix.toString
       }
-          
 
       Emu2VCF(config.output.toString() + "/", config.large, config.small, config.vcf_list, prefix)
     }
   }
 
   def Emu2VCF(outputDir: String, LSVs: java.io.File, small: java.io.File, _sample_list: java.io.File,
-      prefix: String) {
-    def getSampleName(name: String): String =
-      //assumes that the name is if preceeded by the directory full path and has an extension name (e.g. ".vcf")
-      { val temp = name.substring(name.lastIndexOf("/") + 1); temp.substring(0, temp.lastIndexOf(".")) }
+    prefix: String) {
+//    def getSampleName(name: String): String =
+//      //assumes that the name is if preceeded by the directory full path and has an extension name (e.g. ".vcf")
+//      { val temp = name.substring(name.lastIndexOf("/") + 1); temp.substring(0, temp.lastIndexOf(".")) 
+//      
+//      }
+    
     println("Getting sample names.")
     val sample_list = tLines(_sample_list)
     println("Getting variants.")
     val large_variants = tLines(LSVs)
     val small_variants = tLines(small)
+
+//    val pw = new PrintWriter(outputDir + "/monsterfile." + timestamp + ".tmp")
+
     println("Converting Emu to VCF format:")
-    sample_list.foreach(sample => {
-      val sample_names = getSampleName(sample)
-      println(sample_names)
+    for(sample<-sample_list){
+    
+      val sample_names = extractID(sample)
+      println("working on sample: "+sample_names)
       val large_variants_subset = large_variants.filter(lsv => lsv.contains(sample_names))
       val small_variants_subset = small_variants.filter(lsv => lsv.contains(sample_names))
       val concatted_variants = (large_variants_subset ::: small_variants_subset)
@@ -71,7 +77,12 @@ object VCFify extends Tool {
         "FORMAT" + "\t" + "SAMPLE")
       pw.println(concatted_variants.mkString("\n"))
       pw.close
-    })
+    }
+//    pw.close
+    
+//    val it=new tLinesIterator(outputDir + "/monsterfile." + timestamp + ".tmp", false, false)
+    
+    
     println("VCFify complete!")
   }
 
