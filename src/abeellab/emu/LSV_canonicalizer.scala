@@ -81,7 +81,7 @@ object LSV_canonicalizer extends Tool {
           val canonicalized_LSV = merge(modified_list_alt_reps)
           if (boolean4LogFile)
             log_under(canonicalized_LSV, reference_variant, overlapping_variants, outputDir)
-          canonicalized_output_file.println(canonicalized_LSV)
+          canonicalized_output_file.println(canonicalized_LSV.mkString("\n"))
           recursive(remaining_variants.tail diff alternate_representations)
         }
       }
