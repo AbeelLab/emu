@@ -3,9 +3,9 @@
 
 	<property name="project" value="emu" />
 
-	<property name="manifest.mainClass" value="abeellab.emu.CLI" />
+	<property name="manifest.mainClass" value="abeellab.emu.ManuscriptCLI" />
 
-	<property name="src" value="src" />
+	<property name="src" value="src;src_manuscript" />
 
 	<fileset id="jarfiles" dir=".">
 
