@@ -4,7 +4,7 @@ import atk.util.Tool
 import java.io.File
 
 
-object Emu {
+object CLI {
 
   /**
    * input: string of VCF files directory, directory where to write output
@@ -19,16 +19,13 @@ object Emu {
         println(listInstructions);println(help)
       } else {
         args(0) match {
-          case "list" => println(listInstructions)
           case "help" => println(listInstructions);println(help)          
           case "extract" => println("Extracting large sequence variants from VCF files."); ExtractLSVs.main(args.drop(1))
-          case "merge-identicals" => println("Merging identical LSVs."); MergeIdenticalLSVs.main(args.drop(1))                               
-          case "canonicalize" => println("Canonicalizing large sequence variants.");Canonicalize.main(args.drop(1))                   
-          case "lsv-matrix" => println("Creating LSV-to-sample matrix file."); LSVmatrix.main(args.drop(1))
-          case "metrics" => println("Computing Emu metrics."); EmuMetrics.main(args.drop(1))
-          case "vcfify" => println("VCFifying Emu output files."); VCFify.main(args.drop(1))
-          case "fasta2vcf" => println("Converting FASTA files to VCF."); FASTA2VCF.main(args.drop(1))
-          case _ => println(listInstructions); println(help)
+          case "normalize" => println("Normalizing large variants."); Normalize.main(args.drop(1))
+          case "vcfify" => println ("Creating VCF files for each sample"); VCFify.main(args.drop(1))
+        
+          
+          case _ => println(help)
         }
       }
 
@@ -67,12 +64,9 @@ EEEEEEEEEEEEEEEEEEEEEEMMMMMMMM               MMMMMMMM      UUUUUUUUU
 "    COMMANDS             DESCRIPTION\n"
          +
 "    extract              Extracts all PASS-only LSVs and SNPs.\n"+
-"    canonicalize         Identifies and canonicalizes alternate representations of LSVs across a set of microbial genomes.\n"+
-"    lsv-matrix           Creates a LSV-to-sample matrix file\n"+
-"    vcfify               Creates VCF files containing normalized LSVs and extracted SNPs.\n"+ //+
-"    merge-identicals     Merges identical uncanonicalized LSVs across a set of microbial genomes.\n"+
-"    metrics              Creates data file to summarize emu's canonicalization performance.\n"+
-"    lsv-matrix           Creates an LSV-to-sample matrix."
+"    normalize         Identifies and canonicalizes alternate representations of LSVs across a set of microbial genomes.\n"+
+"    vcfify               Creates VCF files containing normalized LSVs and extracted SNPs.\n"
+
 
 )
 println()
