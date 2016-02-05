@@ -9,7 +9,7 @@ object ExtractLSVs extends Tool with EmuUtils {
 
   case class Config(
     val vcfList: File = null,
-    val min_size: Int = 2,
+    val max_size: Int = 15000,
     val outputDir: File = null)
 
   def main(args: Array[String]) {
@@ -18,19 +18,18 @@ object ExtractLSVs extends Tool with EmuUtils {
       opt[File]('v', "vcf-list") required () action { (x, c) =>
         c.copy(vcfList = x)
       } text ("Input text file containing paths to vcf file")
-
-      opt[File]('s', "min-lsv-size") action { (x, c) =>
-        c.copy(vcfList = x)
-      } text ("OPTIONAL. Minimum size (nt) for a variant to be considered an large sequence variant (LSV). Default is 2 nt")
-
       opt[File]('o', "output-directory") required () action { (x, c) =>
         c.copy(outputDir = x)
       } text ("Working output directory")
+      opt[Int]('m', "max-variant-size") action { (x, c) =>
+        c.copy(max_size = x)
+      } text ("OPTIONAL. Maximum size of large variant allowed. If the reference or alternative sequence size of a variant " +
+        "exceeds the threshold then it will be moved to the singletons file (default is 15000 nt).")
     }
 
     parser.parse(args, Config()).map { config =>
-      assume(config.outputDir.exists() && config.outputDir.isDirectory(), "Output directory does not exist or invalid directory!")
       assume(config.vcfList.exists() && config.vcfList.isFile(), "Text file does not exist or invalid file!")
+      assume(config.outputDir.exists() && config.outputDir.isDirectory(), "Output directory does not exist or invalid directory!")
       extract_lsvs(config)
     }
   }
@@ -42,9 +41,9 @@ object ExtractLSVs extends Tool with EmuUtils {
     val vcf_list = tLines(config.vcfList).map(toVCFlist(_))
     val size = vcf_list.size
     //create temporary file that will contain all extracted LSVs
-    val large = new PrintWriter(config.outputDir + "/.intermediate.allLargeVariants.vcf")
+    val large = new PrintWriter(config.outputDir + "/allLargeVariants.vcf")
     //create temporary file that will contain all extracted LSVs
-    val small = new PrintWriter(config.outputDir + "/.intermediate.allSmallVariants.vcf")
+    val small = new PrintWriter(config.outputDir + "/allSmallVariants.vcf")
     //for each file in the list, extract all LSVs and output it the file created above
     vcf_list.foreach(file => {
       println(("Processing: " + (vcf_list.indexOf(file) + 1) + "/" + size + " files"))
@@ -52,26 +51,26 @@ object ExtractLSVs extends Tool with EmuUtils {
       tLines(file.path).map(new VCFLine(_))
         .foreach(x => {
           if (isProperVariant(x)) {
-            if (isLSV(x)) large.println(x.toString + "#&#" + file.sampleID)
+            if (isLSV(x) && (x.ref.size <= config.max_size && x.alt.size <= config.max_size)) large.println(x.toString + "#&#" + file.sampleID)
             else small.println(x.toString + "#&#" + file.sampleID)
           } else small.println(x.toString + "#&#" + file.sampleID)
         })
 
     })
     large.close(); small.close()
-/**
-    println("Sorting large variants")
-
-    val pwx = new PrintWriter(config.outputDir + "/.intermediate.allLargeVariants.vcf")
-    //open temp file, sort by position, and output final file
-    pwx.println(tLines(config.outputDir + "/.intermediate.tmp.allLargeVariants.vcf")
-      .map(new VCFLine(_)).sortBy(_.pos).map(_.toString()).mkString("\n"))
-    pwx.close
-
-    //remove intermediate file
-    val temp = new File(config.outputDir + "/.intermediate.tmp.allLargeVariants.vcf")
-    temp.delete()
-*/
+    /**
+     * println("Sorting large variants")
+     *
+     * val pwx = new PrintWriter(config.outputDir + "/.intermediate.allLargeVariants.vcf")
+     * //open temp file, sort by position, and output final file
+     * pwx.println(tLines(config.outputDir + "/.intermediate.tmp.allLargeVariants.vcf")
+     * .map(new VCFLine(_)).sortBy(_.pos).map(_.toString()).mkString("\n"))
+     * pwx.close
+     *
+     * //remove intermediate file
+     * val temp = new File(config.outputDir + "/.intermediate.tmp.allLargeVariants.vcf")
+     * temp.delete()
+     */
     println("Successfully completed.")
 
   }
