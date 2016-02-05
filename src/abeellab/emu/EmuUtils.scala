@@ -2,9 +2,11 @@ package abeellab.emu
 
 import atk.compbio.vcf.VCFLine
 import be.abeel.bioinformatics.FastaIterator
+import java.io.File
+import atk.util.Tool
 
 /**A bundle of methods and case classes that are used throughout Emu*/
-trait EmuUtils {
+trait EmuUtils extends Tool {
   val variant_type_warning = "Warning: non-long variant found. " +
     "Perhaps a single nucleotide variant sneaked in (this does not affect normalization)."
   /**
@@ -30,15 +32,15 @@ trait EmuUtils {
   case class Nest(variant: EmuVCF, localStart: Int, localEnd: Int, count: Int, sampleIDs: List[String])
   /**case class for local reference genome*/
   case class LocalReference(start: Int, end: Int, sequence: String)
-  /**Check if the reference variant is larger than the query*/
+  /**Method to check if the reference variant is larger than the query*/
   def isLarger(ref: Nest, que: Nest): Boolean = {
     ref.localStart < que.localStart || ref.localEnd > que.localEnd
   }
-  /** Check if the variant is a not a single nucleotide variant */
+  /**Method Check if the variant is a not a single nucleotide variant */
   def isLSV(x: VCFLine): Boolean = x.variation.strType.contains("Long")
-  /** Check whether the variant has a proper reference and alternative vcf column entry*/
+  /**Method to check whether the variant has a proper reference and alternative vcf column entry*/
   def isProperVariant(x: VCFLine): Boolean = x.ref.matches(("[A|T|G|C|N]+")) && x.alt.matches(("[A|T|G|C|N]+"))
-  /** Check if two large variants overlap in terms of their reference positions or 10 nt window if insertion */
+  /**Method to check if two large variants overlap in terms of their reference positions or 10 nt window if insertion */
   def isOverlap(reference: VCFLine, query: VCFLine, windowSize: Int): Boolean = {
     if (reference.refGenome != query.refGenome) false
     else {
@@ -57,6 +59,25 @@ trait EmuUtils {
       //check if reference and query overlaps
       reference_start <= query_end && reference_end >= query_start
     }
+  }
+  /**Method to convert a partitioned file into local reference and nest*/
+  def toLocalReferenceAndNest(file: String): (LocalReference, List[Nest]) = {
+    //load variants
+    val tmp = tLines(file)
+    //get the header (local reference line)
+    val header = tmp.head.split(";")
+    //convert header to local reference case class
+    (new LocalReference(header(0).toInt, header(1).toInt, header(2).toString),
+      //convert the rest of the lines into Nest case class
+      tmp.tail.map(variant => {
+        //for each variant, conver to EmuVCF case class
+        val emuVCF = toEmuVCF(variant)
+        //calculate the local position to the relative to the local reference
+        val (localStart, localEnd) = (emuVCF.variant.pos - header(0).toInt,
+          ((header(1).toInt - header(0).toInt)) - (header(1).toInt - (emuVCF.variant.pos + emuVCF.variant.refLength)))
+        //convert to Nest case class
+        new Nest(emuVCF, localStart, localEnd, 1, List(emuVCF.sampleID))
+      }))
   }
   /**Method to parse out sequence from a FASTA file*/
   def fastaParser(reference: FastaIterator, start: Int, end: Int, chrm: String): String = {
@@ -187,14 +208,15 @@ trait EmuUtils {
     }
   }
 
+  /**Method to replace local reference sequence with variant sequence*/
+  def getVariantAffect(localref: LocalReference, alt: String, start: Int, end: Int): String = {
+    val leftFlank = localref.sequence.substring(0, start)
+    val rightFlank = localref.sequence.substring(end)
+    leftFlank + alt + rightFlank
+  }
+
   /**Method to find whether two lsvs are alternate representations*/
   def isAltRep(reference: Nest, query: Nest, localRef: LocalReference, leniency: Double): Boolean = {
-    //method to replace local reference sequence with variant sequence
-    def getVariantAffect(alt: String, start: Int, end: Int): String = {
-      val leftFlank = localRef.sequence.substring(0, start)
-      val rightFlank = localRef.sequence.substring(end)
-      leftFlank + alt + rightFlank
-    }
     //Method to adjust the affected sequence of if the reference variant is a substitution
     def adjustAffectedSequence(refSeq: String, queSeq: String): (String, String) = {
       //for substitution, we want to avoid other variation around the flanking regions.
@@ -211,23 +233,26 @@ trait EmuUtils {
       (adjustedRef, adjustedQue)
     }
     //get the effect of the variant in respects to the local reference sequence
-    val reference_effect = getVariantAffect(reference.variant.variant.alt, reference.localStart, reference.localEnd)
-    val query_effect = getVariantAffect(query.variant.variant.alt, query.localStart, query.localEnd)
-
+    val reference_effect = getVariantAffect(localRef, reference.variant.variant.alt, reference.localStart, reference.localEnd)
+    val query_effect = getVariantAffect(localRef, query.variant.variant.alt, query.localStart, query.localEnd)
     //Method to handle insertions
     def handleInsertionVariants(): Boolean = {
       val complete_type = List(reference.variant.complete, query.variant.complete).distinct
-      //if insertions are both complete
+      //if insertions are both complete, same size (e.g. no frameshifts) but allow differences for snps
       if (complete_type.size == 1 && complete_type.head == true) {
-        levenshtein(reference_effect, query_effect) <= calculateMaxMismatches(reference_effect.size, leniency)
+        reference_effect.size == query_effect.size &&
+        //since both are the same size, just use the reference_effect.size
+        levenshtein(reference_effect, query_effect,calculateMaxMismatches(reference_effect.size, leniency))
       } //if insertions are both incomplete
       else if (complete_type.size == 1 && complete_type.head == false) {
         //adjust the incomplete insertions
         val adjusted_insertions = adjustIncomplete(reference_effect, query_effect, complete_type.size)
+        //leniency will be computed based relative to the size of the biggest insertion
+        val maxsize = adjusted_insertions(0)._1.size + adjusted_insertions(1)._2.size
         //compare each flank independently via levenshtein then add the scores
-        levenshtein(adjusted_insertions.head._1, adjusted_insertions.last._1) +
-          levenshtein(adjusted_insertions.head._2, adjusted_insertions.last._2) <= 
-            calculateMaxMismatches(reference_effect.size, leniency)
+        levenshtein(adjusted_insertions.head._1 + adjusted_insertions.head._2,
+            adjusted_insertions.last._1 + adjusted_insertions.last._2,
+          calculateMaxMismatches(maxsize, leniency))
       } else {
         //obtain the variant that is complete and incomplete
         val complete = if (reference_effect.contains("N")) query_effect else reference_effect
@@ -236,9 +261,11 @@ trait EmuUtils {
         if (incomplete.size - 10 > complete.size) false
         else {
           val adjusted_insertions = adjustIncomplete(complete, incomplete, complete_type.size)
-         levenshtein(adjusted_insertions.head._1, adjusted_insertions.last._1) +
-            levenshtein(adjusted_insertions.head._2, adjusted_insertions.last._2) <= 
-              calculateMaxMismatches(reference_effect.size, leniency)
+          //leniency will be computed based relative to the size of the biggest insertion
+          val maxsize = adjusted_insertions(0)._1.size + adjusted_insertions(1)._2.size
+          levenshtein(adjusted_insertions.head._1 + adjusted_insertions.head._2,
+            adjusted_insertions.last._1 + adjusted_insertions.last._2,
+            calculateMaxMismatches(maxsize, leniency))
         }
       }
     }
@@ -275,12 +302,11 @@ trait EmuUtils {
               //assumption 3: if the substitution is larger than the query, then it contains nearby variation
               //also, if the query is smaller, it truly is a multi-variant region
               if (isLarger(query, reference) && query_effect.size >= reference_effect.size) {
-                //adjust the left flanking sequence accordingly
-                //val (ref, que) = adjustAffectedSequence(reference_effect, query_effect)
+                //leniency calculated to the largest ref seq from deletion and substitution
+                val maxsize = List(reference.variant.variant.ref.size - 1, query.variant.variant.ref.size - 1).max
+                //no frameshifts allowed (thats why the size must be the same)
                 reference_effect.size == query_effect.size &&
-                  levenshtein(reference_effect, query_effect) <= calculateMaxMismatches(reference_effect.size, leniency)
-                //check whether the adjusted sequences are identical
-                //ref == que
+                  levenshtein(reference_effect, query_effect,calculateMaxMismatches(maxsize, leniency))
                 //else, check whether the effects are identical
               } else reference_effect == query_effect
             }
@@ -295,12 +321,11 @@ trait EmuUtils {
           case "LongDeletion" => {
             //see assumption 3
             if (isLarger(reference, query)) {
-              //adjust the left flanking sequence accordingly
-              // val (ref, que) = adjustAffectedSequence(reference_effect, query_effect)
-              //check whether the adjusted sequences are identical
-              //ref == que
+              //leniency calculated to the largest ref seq from deletion and substitution
+              val maxsize = List(reference.variant.variant.ref.size - 1, query.variant.variant.ref.size - 1).max
+              //no frameshifts allowed (thats why the size must be the same)
               reference_effect.size == query_effect.size &&
-                levenshtein(reference_effect, query_effect) <= calculateMaxMismatches(reference_effect.size, leniency)
+                levenshtein(reference_effect, query_effect, calculateMaxMismatches(maxsize, leniency))
               //else, check whether the effects are identical
             } else {
               reference_effect == query_effect
@@ -314,9 +339,10 @@ trait EmuUtils {
             else {
               //if the substitutions are deletions, compare via levenshtein distance
               if (sub_types.head == "LongDeletion") {
-               levenshtein(reference_effect, query_effect) <= calculateMaxMismatches(reference_effect.size, leniency)
-              }
-              else {
+                //leniency calculated to the largest ref seq from deletion and substitution
+                val maxsize = List(reference.variant.variant.ref.size - 1, query.variant.variant.ref.size - 1).max
+                levenshtein(reference_effect, query_effect, calculateMaxMismatches(maxsize, leniency))
+              } else {
                 // use method to handle insertion-based variants
                 handleInsertionVariants()
               }
@@ -331,8 +357,8 @@ trait EmuUtils {
   }
 
   /**Method to normalize large variants*/
-  def normalizeLSVs(localRef: LocalReference, remainingVariants: List[Nest], 
-      normalized: List[Nest], leniency: Double): List[Nest] = {
+  def normalizeLSVs(localRef: LocalReference, remainingVariants: List[Nest],
+    normalized: List[Nest], leniency: Double): List[Nest] = {
     if (remainingVariants.isEmpty) normalized
     else {
       //get the head variant, treat this as the reference variant
@@ -348,13 +374,13 @@ trait EmuUtils {
     }
   }
   /**Method to calculate leniency when substitution and insertions are involved during comparison*/
-  def calculateMaxMismatches(size: Int, percent_leniency: Double): Int = (size*percent_leniency).floor.toInt
+  def calculateMaxMismatches(size: Int, percent_leniency: Double): Int = (size * percent_leniency).floor.toInt
 
   /**
    * Levenshtein-Damareu distance algorithm.
    *  Thanks to wikipidia! (http://en.wikibooks.org/wiki/Algorithm_Implementation/Strings/Levenshtein_distance#Scala)
    */
-  def levenshtein(str1: String, str2: String): Int = {
+  def levenshtein(str1: String, str2: String, leniency: Int): Boolean = {
     val lenStr1 = str1.length
     val lenStr2 = str2.length
 
@@ -363,18 +389,23 @@ trait EmuUtils {
     for (i <- 0 to lenStr1) d(i)(0) = i
     for (j <- 0 to lenStr2) d(0)(j) = j
 
-    for (i <- 1 to lenStr1; j <- 1 to lenStr2) {
-      val cost = if (str1(i - 1) == str2(j - 1)) 0 else 1
+    for (i <- 1 to lenStr1) {
+      for (j <- 1 to lenStr2) {
+        val cost = if (str1(i - 1) == str2(j - 1)) 0 else 1
 
-      d(i)(j) = min(
-        d(i - 1)(j) + 1, // deletion
-        d(i)(j - 1) + 1, // insertions
-        d(i - 1)(j - 1) + cost // substitution
-        )
-
+        d(i)(j) = min(
+          d(i - 1)(j) + 1, // deletion
+          d(i)(j - 1) + 1, // insertions
+          d(i - 1)(j - 1) + cost // substitution
+          )
+      }
+      //keeps track of the current row's distance score
+      val current_minimum_score = minimum(d(i))
+      if(current_minimum_score > leniency) return false
     }
-    val distance = d(lenStr1)(lenStr2)
-    distance
+   d(lenStr1)(lenStr2) <= leniency
+   
   }
   def min(nums: Int*): Int = nums.min
+  def minimum(nums: Array[Int]): Int = nums.min
 }
