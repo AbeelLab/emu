@@ -23,8 +23,8 @@ class ExtractionTest extends FunSuite with Tool {
   //second test checks whether the output files are accurate
   test("Validate number of LSVs and SNVs extracted") {
     assert(lsvs.size == 91, "Unexpected number of LSVs extracted")
-    assert(snvs.size == 319, "Unexpected number of SNVs extracted")
-    assert(lsvs.size + snvs.size == 410, "Total number of extracted variants do not add up to original amount in VCF files")
+    assert(snvs.size == 320, "Unexpected number of SNVs extracted")
+    assert(lsvs.size + snvs.size == 411, "Total number of extracted variants do not add up to original amount in VCF files")
   }
   
   //third test manually checks that all lsvs extracted are actually lsvs
